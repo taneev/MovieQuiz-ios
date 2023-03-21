@@ -15,6 +15,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
+    private var statisticService: StatisticService?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -23,6 +24,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         initRoundStat() // инициализируем статистику раунда
         imageView.layer.masksToBounds = true // Готовим возможность работать с рамкой
         imageView.layer.cornerRadius = 20 // устанавливаем радиус скругления углов картинки
+
+        statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(delegate: self)
         questionFactory?.requestNextQuestion()
     }
@@ -99,7 +102,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if currentQuestionIndex >= questionsAmount - 1 {
             // формируем результат
             let resultTitle = "Этот раунд окончен!"
-            let resultText = "Ваш результат: \(correctAnswers) из \(questionsAmount)\n"
+            var resultText = "Ваш результат: \(correctAnswers) из \(questionsAmount)\n"
+            if let statisticService {
+                // Сохраним результат (и заодно пересчитаем статистику)
+                statisticService.store(correct: correctAnswers, total: questionsAmount)
+
+                // Доформируем строку результата с пересчитанной статистикой
+                let bestGame = statisticService.bestGame
+                resultText += "Количество сыграных квизов: \(statisticService.gamesCount)\n"
+                resultText += "Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))\n"
+                resultText += "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+            }
             let buttonText = "Сыграть еще раз"
             
             show(quiz: QuizResultsViewModel(title: resultTitle, text: resultText, buttonText: buttonText))
@@ -121,7 +134,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func show(quiz result: QuizResultsViewModel) {
 
-        let alert = AlertModel(title: result.title,message: result.text, buttonText: result.buttonText)
+        let alert = AlertModel(title: result.title, message: result.text, buttonText: result.buttonText)
             {[weak self] _ in
                 guard let self else {return}
                 self.initRoundStat()
