@@ -75,6 +75,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter.showAlert(alert: networkAlert)
     }
 
+    private func showLoadImageError(message: String) {
+        let networkAlert = AlertModel(
+            title: "Ошибка",
+            message: message,
+            buttonText: "Попробовать еще раз") {[weak self] _ in
+                guard let self else {return}
+
+                self.questionFactory?.requestNextQuestion()
+            }
+        let alertPresenter = AlertPresenter(controller: self)
+        alertPresenter.showAlert(alert: networkAlert)
+    }
+
     private func showAnswerResult(isCorrect: Bool) {
         
         // На время показа результата заблокируем кнопки
@@ -183,4 +196,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     func didFailToLoadData(with error: Error) {
         showNetworkError(message: error.localizedDescription)
     }
+
+    func didFailToLoadImage(with error: Error) {
+        showLoadImageError(message: error.localizedDescription)
+    }
+
 }

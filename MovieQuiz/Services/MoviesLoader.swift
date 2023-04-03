@@ -12,9 +12,6 @@ protocol MoviesLoading {
 }
 
 struct MoviesLoader: MoviesLoading {
-    private enum LoaderError: Error {
-        case loaderDecodeError
-    }
 
     // MARK: - NetworkClient
     private let networkClient = NetworkClient()
