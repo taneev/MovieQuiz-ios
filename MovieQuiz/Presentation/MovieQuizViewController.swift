@@ -51,13 +51,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
 
     private func showLoadingIndicator() {
-        activityIndicator.isHidden = false
+        // используется Hides when stopped (включено на сториборде)
         activityIndicator.startAnimating()
     }
 
     private func hideLoadingIndicator() {
         activityIndicator.stopAnimating()
-        activityIndicator.isHidden = true
     }
 
     private func showNetworkError(message: String) {
