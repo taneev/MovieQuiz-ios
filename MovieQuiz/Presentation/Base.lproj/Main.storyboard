@@ -114,16 +114,22 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="zzu-Da-Dss">
+                                <rect key="frame" x="188.5" y="429.5" width="37" height="37"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="ypBlack"/>
                         <constraints>
                             <constraint firstItem="ouo-jh-Uqo" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="5Dt-ap-9gi"/>
                             <constraint firstItem="ouo-jh-Uqo" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="LeI-fg-zea"/>
+                            <constraint firstItem="zzu-Da-Dss" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="Y3Z-TM-c5N"/>
+                            <constraint firstItem="zzu-Da-Dss" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="fcD-g5-n8n"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="ouo-jh-Uqo" secondAttribute="trailing" constant="20" id="ts5-iV-aku"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="zzu-Da-Dss" id="f8z-Xt-OOq"/>
                         <outlet property="counterLabel" destination="CDi-gL-wsd" id="ySf-5H-oMw"/>
                         <outlet property="imageView" destination="amm-tg-EaM" id="xzW-TB-Xai"/>
                         <outlet property="noButton" destination="NMb-aA-hJW" id="AUf-2f-Mz7"/>
