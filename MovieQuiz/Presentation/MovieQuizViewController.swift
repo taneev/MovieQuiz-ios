@@ -26,6 +26,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.masksToBounds = true // Готовим возможность работать с рамкой
         imageView.layer.cornerRadius = 20 // устанавливаем радиус скругления углов картинки
 
+        presenter.viewController = self
+
         statisticService = StatisticServiceImplementation()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         showLoadingIndicator()
@@ -38,15 +40,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     @IBAction private func noButtonClicked(_ sender: Any) {
-        guard let currentQuestion else {return}
-        let isCorrect = currentQuestion.correctAnswer == false
-        showAnswerResult(isCorrect: isCorrect)
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
     
     @IBAction private func yesButtonClicked(_ sender: Any) {
-        guard let currentQuestion else {return}
-        let isCorrect = currentQuestion.correctAnswer == true
-        showAnswerResult(isCorrect: isCorrect)
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
 
     private func showLoadingIndicator() {
@@ -86,7 +86,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter.showAlert(alert: networkAlert)
     }
 
-    private func showAnswerResult(isCorrect: Bool) {
+    func showAnswerResult(isCorrect: Bool) {
         
         // На время показа результата заблокируем кнопки
         toggleButtonsState(enable: false)
