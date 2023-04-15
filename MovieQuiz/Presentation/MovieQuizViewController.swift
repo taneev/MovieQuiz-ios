@@ -1,7 +1,7 @@
 import UIKit
 
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController {
 
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
@@ -11,25 +11,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
 
-    private var correctAnswers: Int = 0
-    private var questionFactory: QuestionFactoryProtocol?
-    private var statisticService: StatisticService?
-    private let presenter = MovieQuizPresenter()
+    private var presenter: MovieQuizPresenter!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        initRoundStat() // инициализируем статистику раунда
         imageView.layer.masksToBounds = true // Готовим возможность работать с рамкой
         imageView.layer.cornerRadius = 20 // устанавливаем радиус скругления углов картинки
-
-        presenter.viewController = self
-
-        statisticService = StatisticServiceImplementation()
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        showLoadingIndicator()
-        questionFactory?.loadData()
+        presenter = MovieQuizPresenter(viewController: self)
+        presenter.restartGame() // инициализируем статистику раунда
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -45,38 +36,34 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         presenter.yesButtonClicked()
     }
 
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         // используется Hides when stopped (включено на сториборде)
         activityIndicator.startAnimating()
     }
 
-    private func hideLoadingIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.stopAnimating()
     }
 
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         hideLoadingIndicator()
 
         let networkAlert = AlertModel(
             title: "Ошибка",
             message: message,
             buttonText: "Попробовать еще раз") {[weak self] _ in
-                guard let self else {return}
-
-                self.questionFactory?.loadData()
+                self?.presenter.reloadData()
             }
         let alertPresenter = AlertPresenter(controller: self)
         alertPresenter.showAlert(alert: networkAlert)
     }
 
-    private func showLoadImageError(message: String) {
+    func showLoadImageError(message: String) {
         let networkAlert = AlertModel(
             title: "Ошибка",
             message: message,
             buttonText: "Попробовать еще раз") {[weak self] _ in
-                guard let self else {return}
-
-                self.questionFactory?.requestNextQuestion()
+                self?.presenter.restartQuestion()
             }
         let alertPresenter = AlertPresenter(controller: self)
         alertPresenter.showAlert(alert: networkAlert)
@@ -87,26 +74,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         // На время показа результата заблокируем кнопки
         toggleButtonsState(enable: false)
         
-        if isCorrect {
-            correctAnswers += 1
-        }
+        presenter.didAnswer(isCorrectAnswer: isCorrect)
+
         // Устанавливаем цвет и толщину рамки
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {[weak self] in
-            guard let self else {return}
-
-            self.presenter.correctAnswers = self.correctAnswers
-            self.presenter.questionFactory = self.questionFactory
-            self.presenter.statisticService = self.statisticService
-            self.showNextQuestionOrResults()
+            self?.showNextQuestionOrResults()
         }
-    }
-    
-    private func initRoundStat() {
-        presenter.resetQuestionIndex()
-        correctAnswers = 0
     }
 
     private func toggleButtonsState(enable: Bool) {
@@ -133,32 +109,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
         let alert = AlertModel(title: result.title, message: result.text, buttonText: result.buttonText)
             {[weak self] _ in
-                guard let self else {return}
-                self.initRoundStat()
-                // показываем первый вопрос
-                self.questionFactory?.requestNextQuestion()
+                self?.presenter.restartGame()
             }
         let alertPresenter = AlertPresenter(controller: self, accessibilityIdentifier: "Quiz result")
         alertPresenter.showAlert(alert: alert)
     }
-
-    // MARK: - QuestionFactoryDelegate
-
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didRecieveNextQuestion(question: question)
-    }
-
-    func didLoadDataFromServer() {
-        hideLoadingIndicator()
-        questionFactory?.requestNextQuestion()
-    }
-
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-
-    func didFailToLoadImage(with error: Error) {
-        showLoadImageError(message: error.localizedDescription)
-    }
-
 }
