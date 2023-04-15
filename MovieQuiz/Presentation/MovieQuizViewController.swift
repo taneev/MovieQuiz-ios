@@ -11,13 +11,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
 
-    private var currentQuestionIndex: Int = 0
     private var correctAnswers: Int = 0
     
-    private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticService?
+    private let presenter = MovieQuizPresenter()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -107,7 +106,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func initRoundStat() {
-        currentQuestionIndex = 0
+        presenter.resetQuestionIndex()
         correctAnswers = 0
     }
 
@@ -115,25 +114,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         noButton.isEnabled = enable
         yesButton.isEnabled = enable
     }
-    
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let movieImage = UIImage(data: model.image) ?? UIImage()
-        let quizStep = QuizStepViewModel(image: movieImage, question: model.text, questionNumber: "\(currentQuestionIndex+1)/\(questionsAmount)")
-        return quizStep
-    }
 
     // MARK: - Show
     private func showNextQuestionOrResults() {
         // Если кнопки заблокированы, разблокируем их (блокируются на время показа ответа на предыдущий вопрос)
         toggleButtonsState(enable: true)
         
-        if currentQuestionIndex >= questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             // формируем результат
             let resultTitle = "Этот раунд окончен!"
-            var resultText = "Ваш результат: \(correctAnswers) из \(questionsAmount)\n"
+            var resultText = "Ваш результат: \(correctAnswers) из \(presenter.questionsAmount)\n"
             if let statisticService {
                 // Сохраним результат (и заодно пересчитаем статистику)
-                statisticService.store(correct: correctAnswers, total: questionsAmount)
+                statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
 
                 // Доформируем строку результата с пересчитанной статистикой
                 let bestGame = statisticService.bestGame
@@ -147,7 +140,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
         else {
             // готовим следующий вопрос
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
     }
@@ -169,7 +162,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                 // показываем первый вопрос
                 self.questionFactory?.requestNextQuestion()
             }
-        let alertPresenter = AlertPresenter(controller: self)
+        let alertPresenter = AlertPresenter(controller: self, accessibilityIdentifier: "Quiz result")
         alertPresenter.showAlert(alert: alert)
     }
 
@@ -181,7 +174,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
 
         currentQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
