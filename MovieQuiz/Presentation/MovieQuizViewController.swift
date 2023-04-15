@@ -8,7 +8,6 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
-
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
 
     private var presenter: MovieQuizPresenter!
@@ -20,7 +19,6 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.masksToBounds = true // Готовим возможность работать с рамкой
         imageView.layer.cornerRadius = 20 // устанавливаем радиус скругления углов картинки
         presenter = MovieQuizPresenter(viewController: self)
-        presenter.restartGame() // инициализируем статистику раунда
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -69,34 +67,18 @@ final class MovieQuizViewController: UIViewController {
         alertPresenter.showAlert(alert: networkAlert)
     }
 
-    func showAnswerResult(isCorrect: Bool) {
-        
-        // На время показа результата заблокируем кнопки
-        toggleButtonsState(enable: false)
-        
-        presenter.didAnswer(isCorrectAnswer: isCorrect)
-
+    func highlightImageBorder(isCorrectAnswer: Bool) {
         // Устанавливаем цвет и толщину рамки
         imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {[weak self] in
-            self?.showNextQuestionOrResults()
-        }
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
 
-    private func toggleButtonsState(enable: Bool) {
+    func toggleButtonsState(enable: Bool) {
         noButton.isEnabled = enable
         yesButton.isEnabled = enable
     }
 
     // MARK: - Show
-    private func showNextQuestionOrResults() {
-        // Если кнопки заблокированы, разблокируем их (блокируются на время показа ответа на предыдущий вопрос)
-        toggleButtonsState(enable: true)
-        presenter.showNextQuestionOrResults()
-    }
-
     func show(quiz step: QuizStepViewModel) {
 
         imageView.image = step.image
