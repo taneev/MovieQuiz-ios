@@ -7,7 +7,7 @@
 
 import UIKit
 
-class AlertPresenter {
+final class AlertPresenter {
     
     private var controller: UIViewController
     private var accessibilityIdentifier: String
